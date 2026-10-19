@@ -1,0 +1,44 @@
+services:
+    # Production-like image: `docker compose up --build` -> http://localhost:8000
+    app:
+        build:
+            context: .
+            target: production
+        ports:
+            - '${APP_PORT:-8000}:80'
+        environment:
+            APP_NAME: GameVote
+            APP_ENV: production
+            APP_DEBUG: 'false'
+            APP_URL: http://localhost:${APP_PORT:-8000}
+            APP_KEY: ${DOCKER_APP_KEY:-}
+            DB_CONNECTION: sqlite
+            DB_DATABASE: /data/database.sqlite
+            LOG_CHANNEL: stderr
+        volumes:
+            - sqlite-data:/data
+
+    # Development with hot reload: `docker compose --profile dev up dev`
+    # App on http://localhost:8000, Vite dev server on http://localhost:5173
+    dev:
+        profiles: [dev]
+        build:
+            context: .
+            target: dev
+            args:
+                UID: ${UID:-1000}
+                GID: ${GID:-1000}
+        user: '${UID:-1000}:${GID:-1000}'
+        environment:
+            # Makes laravel-vite-plugin listen on 0.0.0.0 and advertise localhost
+            LARAVEL_SAIL: '1'
+        ports:
+            - '${APP_PORT:-8000}:8000'
+            - '5173:5173'
+        volumes:
+            - .:/var/www/html
+            - node-modules:/var/www/html/node_modules
+
+volumes:
+    sqlite-data:
+    node-modules:

@@ -2,23 +2,19 @@
 
 ARG PHP_VERSION=8.5
 ARG NODE_VERSION=22
+ARG NGINX_VERSION=1.30
 
 FROM node:${NODE_VERSION}-trixie-slim AS node
 
 # ---------------------------------------------------------------------------
-# PHP 8.5 + Apache with the extensions Laravel needs (SQLite and OPcache are built in)
+# PHP 8.5 FPM with the extensions Laravel needs (SQLite and OPcache are built in)
 # ---------------------------------------------------------------------------
-FROM php:${PHP_VERSION}-apache AS php-base
+FROM php:${PHP_VERSION}-fpm AS php-base
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends git unzip libicu-dev libzip-dev sqlite3 \
     && docker-php-ext-install -j"$(nproc)" intl zip pcntl \
     && rm -rf /var/lib/apt/lists/*
-
-ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
-RUN sed -ri 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf \
-    && sed -ri 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf \
-    && a2enmod rewrite headers
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
@@ -69,7 +65,7 @@ RUN composer dump-autoload --optimize --no-dev \
     && rm -rf node_modules
 
 # ---------------------------------------------------------------------------
-# Production image: no Node, no dev dependencies
+# Production PHP-FPM image: no Node, no dev dependencies
 # ---------------------------------------------------------------------------
 FROM php-base AS production
 
@@ -81,6 +77,16 @@ COPY docker/entrypoint.sh /usr/local/bin/entrypoint
 RUN mkdir -p /data && chown www-data:www-data /data
 VOLUME ["/data"]
 
-EXPOSE 80
+EXPOSE 9000
 ENTRYPOINT ["entrypoint"]
-CMD ["apache2-foreground"]
+CMD ["php-fpm"]
+
+# ---------------------------------------------------------------------------
+# nginx: serves public/ (including built assets) and proxies PHP to the app
+# ---------------------------------------------------------------------------
+FROM nginx:${NGINX_VERSION}-alpine AS web
+
+COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
+COPY --from=build /var/www/html/public /var/www/html/public
+
+EXPOSE 80

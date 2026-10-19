@@ -1,11 +1,30 @@
 services:
-    # Production-like image: `docker compose up --build` -> http://localhost:8000
+    # Production-like stack: `docker compose up --build` -> http://localhost:8000
+    # nginx serves static files and proxies PHP requests to the app (PHP-FPM)
+    web:
+        build:
+            context: .
+            target: web
+        ports:
+            - '${APP_PORT:-8000}:80'
+        depends_on:
+            app:
+                condition: service_healthy
+
     app:
         build:
             context: .
             target: production
-        ports:
-            - '${APP_PORT:-8000}:80'
+        healthcheck:
+            test:
+                - CMD
+                - php
+                - -r
+                - "exit(@fsockopen('127.0.0.1', 9000) ? 0 : 1);"
+            interval: 5s
+            timeout: 3s
+            retries: 3
+            start_period: 30s
         environment:
             APP_NAME: GameVote
             APP_ENV: production

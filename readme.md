@@ -6,7 +6,7 @@ SQLite for the database and Pest for tests.
 ## Docker
 
 ```bash
-# Production-like image (Apache + PHP 8.5, assets prebuilt) -> http://localhost:8000
+# Production-like stack (nginx + PHP 8.5 FPM, assets prebuilt) -> http://localhost:8000
 docker compose up --build
 
 # Development with Vite hot reload -> http://localhost:8000 (Vite on :5173)
@@ -16,8 +16,11 @@ docker compose --profile dev up --build dev
 docker compose --profile dev run --rm dev ./vendor/bin/pest
 ```
 
+- The production stack is two containers: `web` (nginx, serves `public/` and the built assets,
+  config in `docker/nginx.conf`) and `app` (PHP-FPM on port 9000). nginx starts once `app` passes
+  its healthcheck.
 - Set `APP_PORT` to use a host port other than 8000 (e.g. `APP_PORT=8088 docker compose up`).
-- The production container stores its SQLite database and a generated `APP_KEY` in the
+- The `app` container stores its SQLite database and a generated `APP_KEY` in the
   `sqlite-data` volume (`/data`). Pass `DOCKER_APP_KEY` to supply your own key.
 - The dev container bind-mounts the repo, runs as your UID/GID (`UID`/`GID`, default 1000),
   keeps `node_modules` in a named volume, and runs migrations on start.

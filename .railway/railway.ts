@@ -15,7 +15,8 @@ import {
  * Preview with `railway config plan`; apply with `railway config apply`.
  */
 export default defineRailway(() => {
-    const data = volume('gamevote-data', { sizeMB: 1024 });
+    // 512 MB: the most Railway's Free and Trial plans allow, and far more than SQLite needs here.
+    const data = volume('gamevote-data', { sizeMB: 512 });
 
     const app = service('gamevote', {
         source: github('webanoid/gamevote', { branch: 'main' }),
@@ -31,6 +32,9 @@ export default defineRailway(() => {
             restartPolicyType: 'ON_FAILURE',
             restartPolicyMaxRetries: 5,
             requiredMountPath: '/data',
+            // Sleep when idle (Railway "Serverless") so a demo stays within the free credit.
+            // The first request after a sleep wakes it and can be slow or return a 502.
+            sleepApplication: true,
         },
         volumeMounts: { '/data': data },
 

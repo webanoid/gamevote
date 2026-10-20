@@ -127,6 +127,11 @@ flowchart LR
   (APP_KEY, SQLite, migrations, caches) and HTTP basic auth, then runs PHP-FPM and nginx. It exits
   if either dies, so Railway restarts the container, and stops both gracefully on `SIGTERM`.
 - **One replica:** SQLite lives on the volume, and a Railway volume attaches to one service.
+- **Free plan:** the volume is 512 MB, the Free and Trial plans' limit. The service sleeps when idle
+  (Railway "Serverless", `sleepApplication`): after 5–10 minutes without outbound traffic it stops,
+  and the next request wakes it. That first request is slow and can return a 502. The volume, and
+  with it users, votes, the daily ledger and the generated API key, is unaffected. In the
+  dashboard this is **Settings → Deploy → Serverless**.
 - **HTTPS:** `TRUSTED_PROXIES=*` makes Laravel honour Railway's `X-Forwarded-*` headers, so asset
   URLs, redirects and `Secure` cookies use https.
 - **Allowed hosts:** with `TRUSTED_PROXIES` set, only the `APP_URL` host and Railway's health

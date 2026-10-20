@@ -13,3 +13,4 @@ deeper. The diagrams are [Mermaid](https://mermaid.js.org/), which GitHub render
 | [Deployment](deployment.md)           | Docker stacks, environment variables, operating the app                      |
 | [Testing](testing.md)                 | Test strategy, the fake API, what each suite covers                          |
 | [Decisions](decisions.md)             | A log of the significant choices and the alternatives considered             |
+| [One-shot prompt](oneshotprompt.md)   | A single prompt that could rebuild this project in Claude Code               |

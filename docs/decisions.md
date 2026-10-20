@@ -94,3 +94,22 @@ Significant choices, with the alternatives considered. Newest last.
   game onto another page. After optimisation, a vote costs ~95ms of browser work at ~450 games.
 - **Revisit if:** a library could grow well beyond 450 games. Prefer "show top 50 / show all" or
   search over pages.
+
+## 15. Optional HTTP basic auth in nginx
+
+- **Decision:** `HTTP_AUTH_PASSWORD` (and `HTTP_AUTH_USER`, default `gamevote`) in `.env` turns on
+  basic auth for the whole production site; a startup script in the nginx image hashes the
+  password and writes the config.
+- **Why nginx:** it protects pages and static assets before PHP runs, and needs no app code.
+- **Off by default** so `docker-compose up` still works with no setup.
+
+## 16. Railway as a single container
+
+- **Decision:** a final `railway` Dockerfile stage runs nginx and PHP-FPM together, configured by
+  `.railway/railway.ts`, with SQLite on a volume and one replica.
+- **Why:** Railway doesn't run `docker-compose` and can't choose a Dockerfile stage, so it builds
+  the last one. Splitting nginx and PHP-FPM into two Railway services would mean FastCGI over
+  Railway's private network for no benefit at one replica.
+- **Also needed:** `TRUSTED_PROXIES` (Railway terminates TLS), and a `/up` health check exempt from
+  basic auth.
+- **Alternative rejected:** `railway.json`, which stops being read on 2026-12-01.

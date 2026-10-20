@@ -74,8 +74,9 @@ RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
 COPY --from=build --chown=www-data:www-data /var/www/html /var/www/html
 COPY docker/entrypoint.sh /usr/local/bin/entrypoint
 
+# /data holds SQLite and the generated keys. Mount persistent storage there: the sqlite-data
+# volume in docker-compose.yml, or a Railway volume (Railway rejects the VOLUME instruction).
 RUN mkdir -p /data && chown www-data:www-data /data
-VOLUME ["/data"]
 
 EXPOSE 9000
 ENTRYPOINT ["entrypoint"]
@@ -87,6 +88,31 @@ CMD ["php-fpm"]
 FROM nginx:${NGINX_VERSION}-alpine AS web
 
 COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
+COPY --chmod=755 docker/nginx-http-auth.sh /docker-entrypoint.d/40-http-auth.sh
 COPY --from=build /var/www/html/public /var/www/html/public
 
 EXPOSE 80
+
+# ---------------------------------------------------------------------------
+# Railway: nginx and PHP-FPM in one container. Railway runs one container per
+# service and always builds the last stage of this file; docker-compose builds
+# the web and app targets above instead.
+# ---------------------------------------------------------------------------
+FROM production AS railway
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends nginx \
+    && rm -rf /var/lib/apt/lists/* /etc/nginx/sites-enabled/default
+
+COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
+RUN sed -i 's/app:9000/127.0.0.1:9000/g' /etc/nginx/conf.d/default.conf \
+    && printf '[www]\nlisten = 127.0.0.1:9000\n' > /usr/local/etc/php-fpm.d/zz-railway.conf
+
+COPY --chmod=755 docker/nginx-http-auth.sh /usr/local/bin/nginx-http-auth
+COPY --chmod=755 docker/railway-start.sh /usr/local/bin/railway-start
+
+# The PHP image stops with SIGQUIT; Railway (and this script) use SIGTERM.
+STOPSIGNAL SIGTERM
+EXPOSE 8080
+ENTRYPOINT ["railway-start"]
+CMD []

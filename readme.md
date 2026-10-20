@@ -32,6 +32,20 @@ docker-compose exec app php artisan games:seed --force
 `--force` is needed because the Docker stack runs in production mode, where the command otherwise
 asks for confirmation. See [Development](#development) for its options.
 
+To put the whole site behind a password, set these in `.env` before starting (single quotes keep
+characters like `$` and `#` literal):
+
+```bash
+HTTP_AUTH_USER=gamevote
+HTTP_AUTH_PASSWORD='choose-a-password'
+```
+
+nginx then asks for that username and password on every page. Leave `HTTP_AUTH_PASSWORD` empty
+to turn it off; it's off by default.
+
+To host it on [Railway](https://railway.com), see [Deployment → Railway](docs/deployment.md#railway):
+`.railway/railway.ts` defines the service, its volume and variables.
+
 ## How it works
 
 | Rule from the brief                           | How it's enforced                                                                                                      |

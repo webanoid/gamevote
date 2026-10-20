@@ -7,6 +7,10 @@ services:
             target: web
         ports:
             - '${APP_PORT:-8000}:80'
+        environment:
+            # Optional HTTP basic auth for the whole site; off when the password is empty.
+            HTTP_AUTH_USER: ${HTTP_AUTH_USER:-}
+            HTTP_AUTH_PASSWORD: ${HTTP_AUTH_PASSWORD:-}
         depends_on:
             app:
                 condition: service_healthy

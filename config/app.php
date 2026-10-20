@@ -56,6 +56,20 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Trusted Proxies
+    |--------------------------------------------------------------------------
+    |
+    | Proxies whose X-Forwarded-* headers are trusted: "*" for any, or a comma
+    | separated list of IPs. Set this behind a TLS-terminating proxy (such as
+    | Railway's) so URLs and secure cookies use https. Leave it empty when the
+    | app is exposed directly, or clients could spoof their IP address.
+    |
+    */
+
+    'trusted_proxies' => env('TRUSTED_PROXIES'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
     |

@@ -6,6 +6,9 @@ suggest games and vote for the ones they want most, one action per day.
 **Stack:** Laravel 13 on PHP 8.5, React 19 + TypeScript (Inertia v3, Vite 8, Tailwind 4), SQLite,
 Pest. Games and vote totals live in the [Essense code challenge API](https://codechallenge.essensedesigns.info/docs).
 
+**Detailed docs** with diagrams are in [`docs/`](docs/README.md): architecture, data model, the
+daily rule, API integration, frontend, deployment, testing and a decision log.
+
 ## Running it
 
 You only need Docker:

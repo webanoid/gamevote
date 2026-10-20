@@ -46,6 +46,10 @@ to turn it off; it's off by default.
 To host it on [Railway](https://railway.com), see [Deployment → Railway](docs/deployment.md#railway):
 `.railway/railway.ts` defines the service, its volume and variables.
 
+The hosted demo sleeps when idle to stay within Railway's free credit. The first visit after a quiet
+spell wakes it: it can take a few seconds or show a 502 Bad Gateway, so reload once. Nothing is lost
+while it sleeps.
+
 ## How it works
 
 | Rule from the brief                           | How it's enforced                                                                                                      |

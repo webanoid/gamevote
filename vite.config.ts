@@ -71,6 +71,8 @@ export default defineConfig({
             'composer.json',
             'resources/js/components/ui/*',
             'resources/views/mail/*',
+            // An exported transcript, kept exactly as generated.
+            'docs/ai-transcript.md',
         ],
         sortTailwindcss: {
             functions: ['clsx', 'cn', 'cva'],

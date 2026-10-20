@@ -6,6 +6,9 @@ suggest games and vote for the ones they want most, one action per day.
 **Stack:** Laravel 13 on PHP 8.5, React 19 + TypeScript (Inertia v3, Vite 8, Tailwind 4), SQLite,
 Pest. Games and vote totals live in the [Essense code challenge API](https://codechallenge.essensedesigns.info/docs).
 
+**Detailed docs** with diagrams are in [`docs/`](docs/README.md): architecture, data model, the
+daily rule, API integration, frontend, deployment, testing and a decision log.
+
 ## Running it
 
 You only need Docker:
@@ -28,6 +31,20 @@ docker-compose exec app php artisan games:seed --force
 
 `--force` is needed because the Docker stack runs in production mode, where the command otherwise
 asks for confirmation. See [Development](#development) for its options.
+
+To put the whole site behind a password, set these in `.env` before starting (single quotes keep
+characters like `$` and `#` literal):
+
+```bash
+HTTP_AUTH_USER=gamevote
+HTTP_AUTH_PASSWORD='choose-a-password'
+```
+
+nginx then asks for that username and password on every page. Leave `HTTP_AUTH_PASSWORD` empty
+to turn it off; it's off by default.
+
+To host it on [Railway](https://railway.com), see [Deployment → Railway](docs/deployment.md#railway):
+`.railway/railway.ts` defines the service, its volume and variables.
 
 ## How it works
 

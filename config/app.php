@@ -56,6 +56,33 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Trusted Proxies
+    |--------------------------------------------------------------------------
+    |
+    | Proxies whose X-Forwarded-* headers are trusted: "*" for any, or a comma
+    | separated list of IPs. Set this behind a TLS-terminating proxy (such as
+    | Railway's) so URLs and secure cookies use https. Leave it empty when the
+    | app is exposed directly, or clients could spoof their IP address.
+    |
+    */
+
+    'trusted_proxies' => env('TRUSTED_PROXIES'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Content Security Policy
+    |--------------------------------------------------------------------------
+    |
+    | Send a nonce-based Content-Security-Policy header with each response. On
+    | by default in production. It is off in local development because the
+    | Vite dev server would need its own origin and websocket allowed.
+    |
+    */
+
+    'content_security_policy' => (bool) env('CONTENT_SECURITY_POLICY', env('APP_ENV') === 'production'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
     |

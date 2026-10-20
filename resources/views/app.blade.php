@@ -3,9 +3,11 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
+        {{-- The app has its own light and dark themes, so browsers shouldn't auto-darken it. --}}
+        <meta name="color-scheme" content="light dark">
 
         {{-- Inline script to detect system dark mode preference and apply it immediately --}}
-        <script>
+        <script nonce="{{ Vite::cspNonce() }}">
             (function() {
                 const appearance = '{{ $appearance ?? "system" }}';
 
@@ -23,10 +25,12 @@
         <style>
             html {
                 background-color: oklch(1 0 0);
+                color-scheme: light;
             }
 
             html.dark {
                 background-color: oklch(0.145 0 0);
+                color-scheme: dark;
             }
         </style>
 

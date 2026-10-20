@@ -7,6 +7,10 @@ services:
             target: web
         ports:
             - '${APP_PORT:-8000}:80'
+        environment:
+            # Optional HTTP basic auth for the whole site; off when the password is empty.
+            HTTP_AUTH_USER: ${HTTP_AUTH_USER:-}
+            HTTP_AUTH_PASSWORD: ${HTTP_AUTH_PASSWORD:-}
         depends_on:
             app:
                 condition: service_healthy
@@ -52,9 +56,10 @@ services:
         environment:
             # Makes laravel-vite-plugin listen on 0.0.0.0 and advertise localhost
             LARAVEL_SAIL: '1'
+        # Local machine only: the dev server runs with APP_DEBUG=true and Vite serves source files.
         ports:
-            - '${APP_PORT:-8000}:8000'
-            - '5173:5173'
+            - '127.0.0.1:${APP_PORT:-8000}:8000'
+            - '127.0.0.1:5173:5173'
         volumes:
             - .:/var/www/html
             - node-modules:/var/www/html/node_modules

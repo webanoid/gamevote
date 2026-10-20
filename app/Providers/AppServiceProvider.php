@@ -6,6 +6,7 @@ use App\Actions\Games\ResetLocalLibrary;
 use App\Services\Essense\ApiKeyProvider;
 use App\Services\Essense\EssenseClient;
 use Carbon\CarbonImmutable;
+use Illuminate\Http\Middleware\TrustProxies;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\ServiceProvider;
@@ -44,6 +45,12 @@ class AppServiceProvider extends ServiceProvider
     protected function configureDefaults(): void
     {
         Date::use(CarbonImmutable::class);
+
+        $trustedProxies = config('app.trusted_proxies');
+
+        if (is_string($trustedProxies) && $trustedProxies !== '') {
+            TrustProxies::at($trustedProxies === '*' ? '*' : array_map('trim', explode(',', $trustedProxies)));
+        }
 
         DB::prohibitDestructiveCommands(
             app()->isProduction(),

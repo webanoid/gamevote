@@ -20,6 +20,15 @@ in `.env` to use another port.
 No API key is needed: the app gets its own on first use (see [API key](#api-key)). To use a
 specific key instead, put `API_KEY_ESSENCE=your-key` in `.env` before starting.
 
+To start with something to vote on, add 10 sample games with random vote counts:
+
+```bash
+docker-compose exec app php artisan games:seed --force
+```
+
+`--force` is needed because the Docker stack runs in production mode, where the command otherwise
+asks for confirmation. See [Development](#development) for its options.
+
 ## How it works
 
 | Rule from the brief                           | How it's enforced                                                                                                      |
@@ -68,6 +77,9 @@ mention, found by probing the API:
   The client checks the body, not just the status.
 - **Key problems come back as `{"error": "MISSING_KEY" | "INVALID_KEY"}`** with a 4xx status.
 - **Removing a vote at 0 still reports success**, and the count stays at 0.
+- **Concurrent writes can be lost.** When 500 games were added 16 requests at a time, about 4–9%
+  of them never appeared in the list. The app adds games one at a time behind a lock (see below),
+  so it isn't affected, but scripts that write to the API in parallel are.
 
 ### API key
 
@@ -128,6 +140,10 @@ To fill the library with sample data, run `php artisan games:seed` (inside the d
 random vote counts. `--count` and `--max-votes` change those numbers, and titles already in the
 library are skipped. Seeded votes go straight to the API, so they don't count against anyone's
 daily action and aren't tied to any user.
+
+For manual testing, `REMOVE_LIMITS=true` in `.env` turns off the daily rule, so you can vote and
+add games as often as you like. Duplicate titles and one vote per game still apply, the page shows
+that limits are off, and the setting is ignored in production.
 
 Without Docker (PHP 8.5, Node 22.12+): `composer setup`, then `composer dev`. Run
 `composer ci:check` before committing: it runs formatting, lint, TypeScript, Pint, PHPStan and Pest.

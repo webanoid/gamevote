@@ -1,7 +1,9 @@
 import { Form } from '@inertiajs/react';
+import { memo, useState } from 'react';
 import { Check, ThumbsUp, Trash2, Undo2 } from 'lucide-react';
 import GameController from '@/actions/App/Http/Controllers/GameController';
 import GameVoteController from '@/actions/App/Http/Controllers/GameVoteController';
+import MeepleVotes from '@/components/meeple-votes';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -21,7 +23,13 @@ function votesLabel(votes: number): string {
     return votes === 1 ? '1 vote' : `${votes} votes`;
 }
 
-function RemoveGameDialog({ game }: { game: Game }) {
+function RemoveGameDialog({
+    game,
+    onPendingChange,
+}: {
+    game: Game;
+    onPendingChange: (pending: boolean) => void;
+}) {
     return (
         <Dialog>
             <DialogTrigger asChild>
@@ -47,6 +55,8 @@ function RemoveGameDialog({ game }: { game: Game }) {
                 <Form
                     {...GameController.destroy.form(game.id)}
                     options={{ preserveScroll: true }}
+                    onStart={() => onPendingChange(true)}
+                    onFinish={() => onPendingChange(false)}
                 >
                     {({ processing }) => (
                         <DialogFooter className="gap-2">
@@ -70,21 +80,48 @@ function RemoveGameDialog({ game }: { game: Game }) {
     );
 }
 
-export default function GameListItem({
-    game,
-    rank,
-    canVote,
-}: {
+type Props = {
+    ref?: React.Ref<HTMLLIElement>;
     game: Game;
     rank: number;
+    maxVotes: number;
     canVote: boolean;
-}) {
+    /** Increments each time this row's votes change, to replay the highlight; null for no highlight. */
+    highlightRun: number | null;
+    /** Reports when this row's request starts and finishes; the list dims the other rows meanwhile. */
+    onPendingChange: (pending: boolean) => void;
+};
+
+function GameListItem({
+    ref,
+    game,
+    rank,
+    maxVotes,
+    canVote,
+    highlightRun,
+    onPendingChange,
+}: Props) {
+    const [pending, setPending] = useState(false);
+    const reportPending = (isPending: boolean) => {
+        setPending(isPending);
+        onPendingChange(isPending);
+    };
+
     return (
         <li
+            ref={ref}
+            data-pending={pending || undefined}
             className={cn(
-                'flex flex-col gap-3 p-4 sm:flex-row sm:items-center',
+                'relative flex flex-col gap-3 bg-background p-4 transition-opacity sm:flex-row sm:items-center',
                 game.voted && 'bg-primary/[0.03] dark:bg-primary/[0.06]',
             )}
+            style={
+                highlightRun === null
+                    ? undefined
+                    : {
+                          animation: `${highlightRun % 2 ? 'row-changed-a' : 'row-changed-b'} 1.8s ease-out`,
+                      }
+            }
         >
             <div className="flex min-w-0 flex-1 items-center gap-3">
                 <span
@@ -93,19 +130,25 @@ export default function GameListItem({
                 >
                     {rank}
                 </span>
-                <div className="min-w-0">
-                    <p className="truncate font-medium" title={game.name}>
-                        {game.name}
-                    </p>
-                    <p className="text-sm text-muted-foreground tabular-nums">
-                        {votesLabel(game.votes)}
-                    </p>
+                <div className="min-w-0 flex-1 space-y-1">
+                    {/* The badge sits on the title line so every vote bar gets the same track width. */}
+                    <div className="flex min-w-0 items-center gap-2">
+                        <p className="truncate font-medium" title={game.name}>
+                            {game.name}
+                        </p>
+                        {game.voted && (
+                            <Badge variant="secondary">
+                                <Check /> Your vote
+                            </Badge>
+                        )}
+                    </div>
+                    {/* On phones, end where the vote button ends: leave room for the remove button (size-9) and its gap. */}
+                    <MeepleVotes
+                        votes={game.votes}
+                        maxVotes={maxVotes}
+                        className="mr-11 sm:mr-0"
+                    />
                 </div>
-                {game.voted && (
-                    <Badge variant="secondary" className="ml-auto sm:ml-0">
-                        <Check /> Your vote
-                    </Badge>
-                )}
             </div>
 
             <div className="flex items-center gap-2 pl-9 sm:pl-0">
@@ -113,7 +156,9 @@ export default function GameListItem({
                     <Form
                         {...GameVoteController.destroy.form(game.id)}
                         options={{ preserveScroll: true }}
-                        className="flex-1 sm:flex-none"
+                        onStart={() => reportPending(true)}
+                        onFinish={() => reportPending(false)}
+                        className="flex-1 sm:w-36 sm:flex-none"
                     >
                         {({ processing }) => (
                             <Button
@@ -132,7 +177,9 @@ export default function GameListItem({
                     <Form
                         {...GameVoteController.store.form(game.id)}
                         options={{ preserveScroll: true }}
-                        className="flex-1 sm:flex-none"
+                        onStart={() => reportPending(true)}
+                        onFinish={() => reportPending(false)}
+                        className="flex-1 sm:w-36 sm:flex-none"
                     >
                         {({ processing }) => (
                             <Button
@@ -152,8 +199,27 @@ export default function GameListItem({
                         )}
                     </Form>
                 )}
-                <RemoveGameDialog game={game} />
+                <RemoveGameDialog game={game} onPendingChange={reportPending} />
             </div>
         </li>
     );
 }
+
+/**
+ * The server sends new objects for every game after each request, so compare the game's
+ * fields rather than its identity: only rows whose data, rank or highlight changed re-render.
+ */
+export default memo(
+    GameListItem,
+    (previous, next) =>
+        previous.game.id === next.game.id &&
+        previous.game.name === next.game.name &&
+        previous.game.votes === next.game.votes &&
+        previous.game.voted === next.game.voted &&
+        previous.rank === next.rank &&
+        previous.maxVotes === next.maxVotes &&
+        previous.canVote === next.canVote &&
+        previous.highlightRun === next.highlightRun &&
+        previous.ref === next.ref &&
+        previous.onPendingChange === next.onPendingChange,
+);

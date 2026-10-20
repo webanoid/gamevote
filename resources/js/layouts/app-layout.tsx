@@ -1,16 +1,12 @@
-import AppLayoutTemplate from '@/layouts/app/app-sidebar-layout';
-import type { BreadcrumbItem } from '@/types';
+import AppTopBar from '@/components/app-top-bar';
 
-export default function AppLayout({
-    breadcrumbs = [],
-    children,
-}: {
-    breadcrumbs?: BreadcrumbItem[];
-    children: React.ReactNode;
-}) {
+export default function AppLayout({ children }: { children: React.ReactNode }) {
     return (
-        <AppLayoutTemplate breadcrumbs={breadcrumbs}>
-            {children}
-        </AppLayoutTemplate>
+        <div className="flex min-h-screen flex-col">
+            <AppTopBar />
+            <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col px-4 py-6">
+                {children}
+            </main>
+        </div>
     );
 }

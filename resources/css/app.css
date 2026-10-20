@@ -13,6 +13,9 @@
         'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
         'Noto Color Emoji';
 
+    --font-spray:
+        'Rubik Spray Paint', 'Instrument Sans', ui-sans-serif, sans-serif;
+
     --radius-lg: var(--radius);
     --radius-md: calc(var(--radius) - 2px);
     --radius-sm: calc(var(--radius) - 4px);
@@ -139,5 +142,100 @@
 
     body {
         @apply bg-background text-foreground;
+    }
+}
+
+@layer components {
+    /* A painted brick wall for the spray-painted page title (running bond, offset rows). */
+    .graffiti-wall {
+        background-color: #d8cdc4;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='32'%3E%3Crect width='64' height='32' fill='%23d8cdc4'/%3E%3Crect x='1' y='1' width='62' height='14' rx='1' fill='%23ece3db'/%3E%3Crect x='-31' y='17' width='62' height='14' rx='1' fill='%23ece3db'/%3E%3Crect x='33' y='17' width='62' height='14' rx='1' fill='%23ece3db'/%3E%3C/svg%3E");
+    }
+
+    .dark .graffiti-wall {
+        background-color: #1c1917;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='32'%3E%3Crect width='64' height='32' fill='%231c1917'/%3E%3Crect x='1' y='1' width='62' height='14' rx='1' fill='%232b2522'/%3E%3Crect x='-31' y='17' width='62' height='14' rx='1' fill='%232b2522'/%3E%3Crect x='33' y='17' width='62' height='14' rx='1' fill='%232b2522'/%3E%3C/svg%3E");
+    }
+
+    /* The spray paint colour, shared by the title and the vote bars. */
+    :root {
+        --spray: oklch(0.62 0.25 350);
+    }
+
+    .dark {
+        --spray: oklch(0.8 0.2 145);
+    }
+
+    .spray-paint {
+        font-family: var(--font-spray);
+        color: var(--spray);
+        text-shadow:
+            0 0 1px currentColor,
+            0 0 6px color-mix(in oklab, currentColor 55%, transparent),
+            0 0 18px color-mix(in oklab, currentColor 30%, transparent);
+    }
+
+    /* Let the browser skip layout and painting for rows scrolled out of view; a long list
+       otherwise relays out every row after each vote. */
+    .games-list > li {
+        content-visibility: auto;
+        contain-intrinsic-size: auto 92px;
+    }
+
+    /* While one game's request is pending, dim the other rows and ignore clicks on them. */
+    .games-list[data-busy] > li:not([data-pending]) {
+        opacity: 0.5;
+        pointer-events: none;
+    }
+
+    /* The filled part of a vote bar, sprayed in the title's colour. */
+    .vote-bar-fill {
+        background: linear-gradient(
+            90deg,
+            color-mix(in oklab, var(--spray) 14%, transparent),
+            color-mix(in oklab, var(--spray) 34%, transparent)
+        );
+        box-shadow: inset -2px 0 0
+            color-mix(in oklab, var(--spray) 70%, transparent);
+    }
+
+    /* A run of paint from a letter; its length comes from --drip. */
+    .paint-drip {
+        position: absolute;
+        top: 70%;
+        width: 0.3rem;
+        height: var(--drip, 1.5rem);
+        border-radius: 0 0 999px 999px;
+        background: linear-gradient(
+            currentColor 60%,
+            color-mix(in oklab, currentColor 70%, transparent)
+        );
+        filter: blur(0.3px);
+    }
+
+    .paint-drip::after {
+        content: '';
+        position: absolute;
+        bottom: -0.15rem;
+        left: 50%;
+        width: 0.45rem;
+        height: 0.5rem;
+        border-radius: 50% 50% 50% 50% / 40% 40% 60% 60%;
+        background: currentColor;
+        transform: translateX(-50%);
+    }
+}
+
+/* A brief glow on list rows whose votes just changed. Two identical keyframes let the
+   same row restart the animation on consecutive changes. */
+@keyframes row-changed-a {
+    from {
+        background-color: color-mix(in oklab, var(--spray) 22%, transparent);
+    }
+}
+
+@keyframes row-changed-b {
+    from {
+        background-color: color-mix(in oklab, var(--spray) 22%, transparent);
     }
 }

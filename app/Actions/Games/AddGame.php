@@ -59,13 +59,13 @@ class AddGame
         try {
             $gameId = $this->client->add($name);
         } catch (EssenseApiException $exception) {
-            $action->delete();
+            $action?->delete();
             report($exception);
 
             throw GameActionException::fromApiFailure($exception);
         }
 
-        $action->update(['game_id' => $gameId]);
+        $action?->update(['game_id' => $gameId]);
 
         return $gameId;
     }

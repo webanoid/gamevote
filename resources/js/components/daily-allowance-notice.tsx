@@ -1,4 +1,4 @@
-import { CalendarCheck, Sparkles } from 'lucide-react';
+import { CalendarCheck, FlaskConical, Sparkles } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import type { DailyAllowance, Game } from '@/types';
 
@@ -20,6 +20,20 @@ export default function DailyAllowanceNotice({
     games: Game[] | null;
     timezone: string;
 }) {
+    if (!allowance.enforced) {
+        return (
+            <Alert>
+                <FlaskConical />
+                <AlertTitle>Daily limits are off</AlertTitle>
+                <AlertDescription>
+                    Testing mode (REMOVE_LIMITS=true): vote and add games as
+                    often as you like. Duplicate titles and one vote per game
+                    still apply.
+                </AlertDescription>
+            </Alert>
+        );
+    }
+
     if (allowance.available) {
         return (
             <Alert>

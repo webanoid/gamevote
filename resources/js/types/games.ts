@@ -6,6 +6,7 @@ export type Game = {
 };
 
 export type DailyAllowance = {
+    enforced: boolean;
     available: boolean;
     used_for: 'vote' | 'add_game' | null;
     game_id: number | null;

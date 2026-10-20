@@ -35,5 +35,6 @@
         <env name="INERTIA_SSR_ENABLED" value="(false)"/>
         <env name="ESSENSE_API_URL" value="https://essense.test"/>
         <env name="API_KEY_ESSENCE" value="test-key"/>
+        <env name="REMOVE_LIMITS" value="(false)"/>
     </php>
 </phpunit>

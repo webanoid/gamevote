@@ -7,7 +7,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 
-export default function AddGameForm({ disabled }: { disabled: boolean }) {
+export default function AddGameForm({
+    disabled,
+    limited,
+}: {
+    disabled: boolean;
+    limited: boolean;
+}) {
     return (
         <Form
             {...GameController.store.form()}
@@ -44,7 +50,9 @@ export default function AddGameForm({ disabled }: { disabled: boolean }) {
                     <p id="name-hint" className="text-xs text-muted-foreground">
                         {disabled
                             ? 'You can suggest a game again after midnight.'
-                            : 'Adding a game uses your action for today.'}
+                            : limited
+                              ? 'Adding a game uses your action for today.'
+                              : 'Add as many games as you like while limits are off.'}
                     </p>
                 </>
             )}

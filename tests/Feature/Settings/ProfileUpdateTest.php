@@ -29,7 +29,7 @@ class ProfileUpdateTest extends TestCase
             ->actingAs($user)
             ->patch(route('profile.update'), [
                 'name' => 'Test User',
-                'email' => 'test@example.com',
+                'username' => 'test_user',
             ]);
 
         $response
@@ -39,26 +39,70 @@ class ProfileUpdateTest extends TestCase
         $user->refresh();
 
         $this->assertSame('Test User', $user->name);
-        $this->assertSame('test@example.com', $user->email);
-        $this->assertNull($user->email_verified_at);
+        $this->assertSame('test_user', $user->username);
     }
 
-    public function test_email_verification_status_is_unchanged_when_the_email_address_is_unchanged()
+    public function test_username_is_stored_in_lowercase_when_updated()
     {
         $user = User::factory()->create();
+
+        $this
+            ->actingAs($user)
+            ->patch(route('profile.update'), [
+                'name' => $user->name,
+                'username' => 'Test_User',
+            ]);
+
+        $this->assertSame('test_user', $user->refresh()->username);
+    }
+
+    public function test_user_can_keep_their_current_username()
+    {
+        $user = User::factory()->create(['username' => 'test_user']);
 
         $response = $this
             ->actingAs($user)
             ->patch(route('profile.update'), [
                 'name' => 'Test User',
-                'email' => $user->email,
+                'username' => 'test_user',
+            ]);
+
+        $response->assertSessionHasNoErrors();
+    }
+
+    public function test_username_cannot_be_changed_to_another_users_username()
+    {
+        User::factory()->create(['username' => 'taken_name']);
+        $user = User::factory()->create(['username' => 'test_user']);
+
+        $response = $this
+            ->actingAs($user)
+            ->from(route('profile.edit'))
+            ->patch(route('profile.update'), [
+                'name' => $user->name,
+                'username' => 'Taken_Name',
             ]);
 
         $response
-            ->assertSessionHasNoErrors()
+            ->assertSessionHasErrors(['username' => 'The username has already been taken.'])
             ->assertRedirect(route('profile.edit'));
 
-        $this->assertNotNull($user->refresh()->email_verified_at);
+        $this->assertSame('test_user', $user->refresh()->username);
+    }
+
+    public function test_username_must_only_contain_letters_numbers_dashes_and_underscores()
+    {
+        $user = User::factory()->create(['username' => 'test_user']);
+
+        $response = $this
+            ->actingAs($user)
+            ->patch(route('profile.update'), [
+                'name' => $user->name,
+                'username' => 'test user',
+            ]);
+
+        $response->assertSessionHasErrors(['username' => 'The username field must only contain letters, numbers, dashes, and underscores.']);
+        $this->assertSame('test_user', $user->refresh()->username);
     }
 
     public function test_user_can_delete_their_account()

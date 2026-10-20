@@ -2,6 +2,9 @@
 
 namespace App\Providers;
 
+use App\Actions\Games\ResetLocalLibrary;
+use App\Services\Essense\ApiKeyProvider;
+use App\Services\Essense\EssenseClient;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
@@ -15,7 +18,16 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->singleton(ApiKeyProvider::class, fn () => new ApiKeyProvider(
+            baseUrl: config('services.essense.url'),
+            configuredKey: config('services.essense.key'),
+            resetLocalLibrary: $this->app->make(ResetLocalLibrary::class),
+        ));
+
+        $this->app->singleton(EssenseClient::class, fn () => new EssenseClient(
+            baseUrl: config('services.essense.url'),
+            keys: $this->app->make(ApiKeyProvider::class),
+        ));
     }
 
     /**

@@ -34,6 +34,7 @@ services:
             DB_CONNECTION: sqlite
             DB_DATABASE: /data/database.sqlite
             LOG_CHANNEL: stderr
+            API_KEY_ESSENCE: ${API_KEY_ESSENCE:-}
         volumes:
             - sqlite-data:/data
 

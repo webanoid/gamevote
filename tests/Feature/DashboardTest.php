@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\FakeEssenseApi;
 use Tests\TestCase;
 
 class DashboardTest extends TestCase
@@ -18,6 +19,7 @@ class DashboardTest extends TestCase
 
     public function test_authenticated_users_can_visit_the_dashboard()
     {
+        FakeEssenseApi::fake();
         $user = User::factory()->create();
         $this->actingAs($user);
 

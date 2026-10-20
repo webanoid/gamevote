@@ -35,4 +35,9 @@ return [
         ],
     ],
 
+    'essense' => [
+        'url' => env('ESSENSE_API_URL', 'https://codechallenge.essensedesigns.info'),
+        'key' => env('API_KEY_ESSENCE'),
+    ],
+
 ];

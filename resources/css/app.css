@@ -148,31 +148,38 @@
 @layer components {
     /* A painted brick wall for the spray-painted page title (running bond, offset rows). */
     .graffiti-wall {
-        background-color: #d8cdc4;
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='32'%3E%3Crect width='64' height='32' fill='%23d8cdc4'/%3E%3Crect x='1' y='1' width='62' height='14' rx='1' fill='%23ece3db'/%3E%3Crect x='-31' y='17' width='62' height='14' rx='1' fill='%23ece3db'/%3E%3Crect x='33' y='17' width='62' height='14' rx='1' fill='%23ece3db'/%3E%3C/svg%3E");
+        background-color: #c9b9ac;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='32'%3E%3Crect width='64' height='32' fill='%23c9b9ac'/%3E%3Crect x='1' y='1' width='62' height='14' rx='1' fill='%23eee6de'/%3E%3Crect x='-31' y='17' width='62' height='14' rx='1' fill='%23eee6de'/%3E%3Crect x='33' y='17' width='62' height='14' rx='1' fill='%23eee6de'/%3E%3C/svg%3E");
     }
 
     .dark .graffiti-wall {
-        background-color: #1c1917;
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='32'%3E%3Crect width='64' height='32' fill='%231c1917'/%3E%3Crect x='1' y='1' width='62' height='14' rx='1' fill='%232b2522'/%3E%3Crect x='-31' y='17' width='62' height='14' rx='1' fill='%232b2522'/%3E%3Crect x='33' y='17' width='62' height='14' rx='1' fill='%232b2522'/%3E%3C/svg%3E");
+        background-color: #110e0d;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='32'%3E%3Crect width='64' height='32' fill='%23110e0d'/%3E%3Crect x='1' y='1' width='62' height='14' rx='1' fill='%233b322d'/%3E%3Crect x='-31' y='17' width='62' height='14' rx='1' fill='%233b322d'/%3E%3Crect x='33' y='17' width='62' height='14' rx='1' fill='%233b322d'/%3E%3C/svg%3E");
     }
 
-    /* The spray paint colour, shared by the title and the vote bars. */
+    /* The spray paint colour, shared by the title and the vote bars. Kept as plain RGB:
+       transparent shades are written rgb(var(--spray-rgb) / alpha) rather than with
+       color-mix(), which older mobile browsers drop entirely when it contains a variable. */
     :root {
-        --spray: oklch(0.62 0.25 350);
+        --spray-rgb: 232 23 155;
+        --spray: rgb(var(--spray-rgb));
+        --spray-fill-from: 0.16;
+        --spray-fill-to: 0.38;
     }
 
     .dark {
-        --spray: oklch(0.8 0.2 145);
+        --spray-rgb: 89 222 101;
+        --spray-fill-from: 0.22;
+        --spray-fill-to: 0.5;
     }
 
     .spray-paint {
         font-family: var(--font-spray);
         color: var(--spray);
         text-shadow:
-            0 0 1px currentColor,
-            0 0 6px color-mix(in oklab, currentColor 55%, transparent),
-            0 0 18px color-mix(in oklab, currentColor 30%, transparent);
+            0 0 1px rgb(var(--spray-rgb)),
+            0 0 6px rgb(var(--spray-rgb) / 0.55),
+            0 0 18px rgb(var(--spray-rgb) / 0.3);
     }
 
     /* Let the browser skip layout and painting for rows scrolled out of view; a long list
@@ -192,11 +199,10 @@
     .vote-bar-fill {
         background: linear-gradient(
             90deg,
-            color-mix(in oklab, var(--spray) 14%, transparent),
-            color-mix(in oklab, var(--spray) 34%, transparent)
+            rgb(var(--spray-rgb) / var(--spray-fill-from)),
+            rgb(var(--spray-rgb) / var(--spray-fill-to))
         );
-        box-shadow: inset -2px 0 0
-            color-mix(in oklab, var(--spray) 70%, transparent);
+        box-shadow: inset -2px 0 0 rgb(var(--spray-rgb) / 0.8);
     }
 
     /* A run of paint from a letter; its length comes from --drip. */
@@ -207,8 +213,8 @@
         height: var(--drip, 1.5rem);
         border-radius: 0 0 999px 999px;
         background: linear-gradient(
-            currentColor 60%,
-            color-mix(in oklab, currentColor 70%, transparent)
+            rgb(var(--spray-rgb)) 60%,
+            rgb(var(--spray-rgb) / 0.7)
         );
         filter: blur(0.3px);
     }
@@ -230,12 +236,12 @@
    same row restart the animation on consecutive changes. */
 @keyframes row-changed-a {
     from {
-        background-color: color-mix(in oklab, var(--spray) 22%, transparent);
+        background-color: rgb(var(--spray-rgb) / 0.22);
     }
 }
 
 @keyframes row-changed-b {
     from {
-        background-color: color-mix(in oklab, var(--spray) 22%, transparent);
+        background-color: rgb(var(--spray-rgb) / 0.22);
     }
 }

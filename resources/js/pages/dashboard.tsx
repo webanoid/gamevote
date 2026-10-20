@@ -4,11 +4,11 @@ import { useState } from 'react';
 import AddGameForm from '@/components/add-game-form';
 import DailyAllowanceNotice from '@/components/daily-allowance-notice';
 import GameListItem from '@/components/game-list-item';
-import Heading from '@/components/heading';
+import SprayPaintedTitle from '@/components/spray-painted-title';
+import { useFlipAnimation } from '@/hooks/use-flip-animation';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
-import { dashboard } from '@/routes';
 import type { DailyAllowance, Game } from '@/types';
 
 type Props = {
@@ -65,12 +65,42 @@ export default function Dashboard({
     allowance,
     timezone,
 }: Props) {
+    const maxVotes = Math.max(0, ...(games ?? []).map((game) => game.votes));
+    const flipRef = useFlipAnimation<HTMLLIElement>(
+        (games ?? []).map((game) => game.id),
+    );
+    const [busy, setBusy] = useState(false);
+
+    // Highlight rows whose votes changed (or that are new) since the previous list.
+    const [previousGames, setPreviousGames] = useState(games);
+    const [highlight, setHighlight] = useState({
+        ids: [] as number[],
+        run: 0,
+    });
+
+    if (games !== previousGames) {
+        setPreviousGames(games);
+
+        if (games && previousGames) {
+            const before = new Map(
+                previousGames.map((game) => [game.id, game.votes]),
+            );
+            const changed = games
+                .filter((game) => before.get(game.id) !== game.votes)
+                .map((game) => game.id);
+
+            if (changed.length > 0) {
+                setHighlight(({ run }) => ({ ids: changed, run: run + 1 }));
+            }
+        }
+    }
+
     return (
         <>
             <Head title="Game library" />
-            <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 p-4 md:p-6">
-                <Heading
-                    title="Game library"
+            <div className="flex flex-col gap-6">
+                <SprayPaintedTitle
+                    title="Game Library"
                     description="Suggest games for the office library and vote for the ones you want most."
                 />
 
@@ -80,7 +110,10 @@ export default function Dashboard({
                     timezone={timezone}
                 />
 
-                <AddGameForm disabled={!allowance.available} />
+                <AddGameForm
+                    disabled={!allowance.available}
+                    limited={allowance.enforced}
+                />
 
                 <section aria-labelledby="games-heading" className="grid gap-3">
                     <h2 id="games-heading" className="text-sm font-medium">
@@ -102,13 +135,25 @@ export default function Dashboard({
                     ) : games.length === 0 ? (
                         <EmptyLibrary />
                     ) : (
-                        <ol className="divide-y overflow-hidden rounded-xl border">
+                        <ol
+                            className="games-list relative divide-y overflow-hidden rounded-xl border"
+                            data-busy={busy || undefined}
+                            aria-busy={busy || undefined}
+                        >
                             {games.map((game, index) => (
                                 <GameListItem
                                     key={game.id}
+                                    ref={flipRef(game.id)}
                                     game={game}
                                     rank={index + 1}
+                                    maxVotes={maxVotes}
                                     canVote={allowance.available}
+                                    highlightRun={
+                                        highlight.ids.includes(game.id)
+                                            ? highlight.run
+                                            : null
+                                    }
+                                    onPendingChange={setBusy}
                                 />
                             ))}
                         </ol>
@@ -118,12 +163,3 @@ export default function Dashboard({
         </>
     );
 }
-
-Dashboard.layout = {
-    breadcrumbs: [
-        {
-            title: 'Game library',
-            href: dashboard(),
-        },
-    ],
-};

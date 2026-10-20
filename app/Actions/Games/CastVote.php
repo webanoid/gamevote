@@ -48,7 +48,7 @@ class CastVote
             $counted = $this->client->vote($gameId);
         } catch (EssenseApiException $exception) {
             $vote->delete();
-            $action->delete();
+            $action?->delete();
             report($exception);
 
             throw GameActionException::fromApiFailure($exception);
@@ -56,7 +56,7 @@ class CastVote
 
         if (! $counted) {
             $vote->delete();
-            $action->delete();
+            $action?->delete();
 
             throw GameActionException::gameNotFound();
         }

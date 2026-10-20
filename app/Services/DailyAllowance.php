@@ -14,9 +14,19 @@ use Illuminate\Database\UniqueConstraintViolationException;
  *
  * The rule is backed by a unique index on (user_id, action_date), so two concurrent
  * requests cannot both spend the same day's allowance.
+ *
+ * Setting REMOVE_LIMITS=true turns the rule off for testing, except in production.
  */
 class DailyAllowance
 {
+    /**
+     * Whether the daily rule is being enforced.
+     */
+    public function isEnforced(): bool
+    {
+        return ! config('games.remove_limits') || app()->isProduction();
+    }
+
     /**
      * Get the action the user has taken today, if any.
      */
@@ -32,16 +42,20 @@ class DailyAllowance
      */
     public function ensureAvailable(User $user): void
     {
-        if ($this->usedToday($user) !== null) {
+        if ($this->isEnforced() && $this->usedToday($user) !== null) {
             throw GameActionException::dailyLimitReached();
         }
     }
 
     /**
-     * Spend today's allowance on the given action.
+     * Spend today's allowance on the given action. Nothing is recorded while the rule is off.
      */
-    public function claim(User $user, DailyActionType $type, ?int $gameId = null): DailyAction
+    public function claim(User $user, DailyActionType $type, ?int $gameId = null): ?DailyAction
     {
+        if (! $this->isEnforced()) {
+            return null;
+        }
+
         try {
             return $user->dailyActions()->create([
                 'action_date' => $user->localToday()->toDateString(),
@@ -99,13 +113,14 @@ class DailyAllowance
     /**
      * Describe the user's allowance for today.
      *
-     * @return array{available: bool, used_for: string|null, game_id: int|null, resets_at: string}
+     * @return array{enforced: bool, available: bool, used_for: string|null, game_id: int|null, resets_at: string}
      */
     public function status(User $user): array
     {
-        $action = $this->usedToday($user);
+        $action = $this->isEnforced() ? $this->usedToday($user) : null;
 
         return [
+            'enforced' => $this->isEnforced(),
             'available' => $action === null,
             'used_for' => $action?->type->value,
             'game_id' => $action?->game_id,

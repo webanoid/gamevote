@@ -31,7 +31,7 @@ export default function Welcome() {
             <div className="flex min-h-screen flex-col bg-background text-foreground">
                 <header className="mx-auto flex w-full max-w-4xl items-center justify-between p-4 md:p-6">
                     <div className="flex items-center gap-2 font-semibold">
-                        <AppLogoIcon className="size-6 fill-current" />
+                        <AppLogoIcon className="size-6 text-red-500" />
                         GameVote
                     </div>
                     <nav className="flex items-center gap-2">

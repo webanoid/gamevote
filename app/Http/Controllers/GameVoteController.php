@@ -30,7 +30,7 @@ class GameVoteController extends Controller
     {
         $removeVote->handle($request->user(), $game);
 
-        $message = $allowance->usedToday($request->user()) === null
+        $message = $allowance->isEnforced() && $allowance->usedToday($request->user()) === null
             ? 'Your vote was removed. You can vote or add a game again today.'
             : 'Your vote was removed.';
 

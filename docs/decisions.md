@@ -113,3 +113,13 @@ Significant choices, with the alternatives considered. Newest last.
 - **Also needed:** `TRUSTED_PROXIES` (Railway terminates TLS), and a `/up` health check exempt from
   basic auth.
 - **Alternative rejected:** `railway.json`, which stops being read on 2026-12-01.
+
+## 17. Security hardening after an audit
+
+- **Done:** dev ports bound to `127.0.0.1`; an extra per-IP login limit (20/min) on top of the
+  per-username one; the `appearance` cookie limited to known values; security headers in nginx;
+  a nonce-based Content-Security-Policy from Laravel in production; allowed hosts enforced when
+  proxies are trusted.
+- **Open:** registration has no rate limit or invite, so extra accounts can bypass the daily
+  rule, and any user can remove any game (as the brief states). Turning on the site password
+  (`HTTP_AUTH_PASSWORD`) limits both to people who know it.

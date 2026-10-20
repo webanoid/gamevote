@@ -70,6 +70,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Content Security Policy
+    |--------------------------------------------------------------------------
+    |
+    | Send a nonce-based Content-Security-Policy header with each response. On
+    | by default in production. It is off in local development because the
+    | Vite dev server would need its own origin and websocket allowed.
+    |
+    */
+
+    'content_security_policy' => (bool) env('CONTENT_SECURITY_POLICY', env('APP_ENV') === 'production'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
     |

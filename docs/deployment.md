@@ -45,18 +45,19 @@ flowchart LR
 
 ## Environment variables
 
-| Variable              | Default                                     | Purpose                                                                           |
-| --------------------- | ------------------------------------------- | --------------------------------------------------------------------------------- |
-| `APP_PORT`            | `8000`                                      | Host port for the app (both stacks)                                               |
-| `API_KEY_ESSENCE`     | empty                                       | Use this API key instead of a generated one                                       |
-| `ESSENSE_API_URL`     | `https://codechallenge.essensedesigns.info` | API base URL                                                                      |
-| `REMOVE_LIMITS`       | `false`                                     | Testing only: turn off the daily rule (ignored in production)                     |
-| `HTTP_AUTH_USER`      | `gamevote`                                  | Username for HTTP basic auth (production stack)                                   |
-| `HTTP_AUTH_PASSWORD`  | empty                                       | Turns on HTTP basic auth for the whole site when set (production stack)           |
-| `DOCKER_APP_KEY`      | empty                                       | Supply `APP_KEY` to the production container instead of generating one            |
-| `INERTIA_SSR_ENABLED` | `true`                                      | Inertia server-side rendering; tests set it off                                   |
-| `UID` / `GID`         | `1000`                                      | User the dev container runs as, so files it writes are yours                      |
-| `TRUSTED_PROXIES`     | empty                                       | Trust `X-Forwarded-*` headers from these proxies (`*` or IPs); set behind Railway |
+| Variable                  | Default                                     | Purpose                                                                           |
+| ------------------------- | ------------------------------------------- | --------------------------------------------------------------------------------- |
+| `APP_PORT`                | `8000`                                      | Host port for the app (both stacks)                                               |
+| `API_KEY_ESSENCE`         | empty                                       | Use this API key instead of a generated one                                       |
+| `ESSENSE_API_URL`         | `https://codechallenge.essensedesigns.info` | API base URL                                                                      |
+| `REMOVE_LIMITS`           | `false`                                     | Testing only: turn off the daily rule (ignored in production)                     |
+| `HTTP_AUTH_USER`          | `gamevote`                                  | Username for HTTP basic auth (production stack)                                   |
+| `HTTP_AUTH_PASSWORD`      | empty                                       | Turns on HTTP basic auth for the whole site when set (production stack)           |
+| `DOCKER_APP_KEY`          | empty                                       | Supply `APP_KEY` to the production container instead of generating one            |
+| `INERTIA_SSR_ENABLED`     | `true`                                      | Inertia server-side rendering; tests set it off                                   |
+| `UID` / `GID`             | `1000`                                      | User the dev container runs as, so files it writes are yours                      |
+| `TRUSTED_PROXIES`         | empty                                       | Trust `X-Forwarded-*` headers from these proxies (`*` or IPs); set behind Railway |
+| `CONTENT_SECURITY_POLICY` | on in production                            | Send a nonce-based Content-Security-Policy header (Laravel middleware)            |
 
 The `app` container receives only `APP_*`, `DB_*`, `LOG_CHANNEL` and `API_KEY_ESSENCE`
 explicitly, and `web` only `HTTP_AUTH_USER` and `HTTP_AUTH_PASSWORD`. `docker-compose` fills `${...}` values from a `.env` next to `docker-compose.yml`.
@@ -128,6 +129,8 @@ flowchart LR
 - **One replica:** SQLite lives on the volume, and a Railway volume attaches to one service.
 - **HTTPS:** `TRUSTED_PROXIES=*` makes Laravel honour Railway's `X-Forwarded-*` headers, so asset
   URLs, redirects and `Secure` cookies use https.
+- **Allowed hosts:** with `TRUSTED_PROXIES` set, only the `APP_URL` host and Railway's health
+  checker (`healthcheck.railway.app`) are accepted; any other `Host` or `X-Forwarded-Host` gets a 400. If you add a custom domain, update `APP_URL` to it.
 - **Health check:** `/up`, which nginx always exempts from basic auth.
 
 ### Deploying
@@ -155,3 +158,10 @@ Then, in the Railway dashboard:
 - **Hidden files** such as `.env` and `.htaccess` are denied (403).
 - **`X-Powered-By`** is hidden.
 - **Fingerprinted assets** (`/build/assets/`) are cached for a year as immutable.
+- **Security headers** on every response: `X-Frame-Options`, `X-Content-Type-Options`,
+  `Referrer-Policy`, `Permissions-Policy`, and HSTS when the proxy reports https.
+  `server_tokens off` hides the nginx version.
+- **Content-Security-Policy** comes from Laravel (`AddContentSecurityPolicy`), because it needs a
+  per-request nonce for the inline theme script and Vite's script tags.
+- **Larger FastCGI header buffers** (32 KB): the CSP, Laravel's asset preload `Link` header and
+  cookies outgrow nginx's default and would otherwise produce a 502.

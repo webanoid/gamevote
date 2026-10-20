@@ -100,9 +100,12 @@ EXPOSE 80
 # ---------------------------------------------------------------------------
 FROM production AS railway
 
+# Debian's nginx logs to files; send them to the container output so Railway shows them.
 RUN apt-get update \
     && apt-get install -y --no-install-recommends nginx \
-    && rm -rf /var/lib/apt/lists/* /etc/nginx/sites-enabled/default
+    && rm -rf /var/lib/apt/lists/* /etc/nginx/sites-enabled/default \
+    && ln -sf /dev/stdout /var/log/nginx/access.log \
+    && ln -sf /dev/stderr /var/log/nginx/error.log
 
 COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
 RUN sed -i 's/app:9000/127.0.0.1:9000/g' /etc/nginx/conf.d/default.conf \

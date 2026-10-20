@@ -7,7 +7,7 @@
         <meta name="color-scheme" content="light dark">
 
         {{-- Inline script to detect system dark mode preference and apply it immediately --}}
-        <script>
+        <script nonce="{{ Vite::cspNonce() }}">
             (function() {
                 const appearance = '{{ $appearance ?? "system" }}';
 

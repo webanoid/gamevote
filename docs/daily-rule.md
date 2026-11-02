@@ -10,15 +10,12 @@ All of the rule lives in `App\Services\DailyAllowance`, backed by the `daily_act
 ## A user's day
 
 ```mermaid
-stateDiagram-v2
-    [*] --> Available: local midnight
-    Available --> SpentOnVote: cast a vote
-    Available --> SpentOnAdd: add a game
-    SpentOnVote --> Available: remove that vote the same day
-    SpentOnVote --> Available: that game is removed the same day
-    SpentOnAdd --> Available: that game is removed the same day
-    SpentOnVote --> [*]: local midnight
-    SpentOnAdd --> [*]: local midnight
+flowchart LR
+    mid(["Local midnight<br/>(resets every day)"]) --> avail["Available"]
+    avail -- "cast a vote" --> vote["Spent on a vote"]
+    avail -- "add a game" --> add["Spent on a new game"]
+    vote -. "refund, same day only:<br/>you remove that vote,<br/>or the game is removed" .-> avail
+    add -. "refund, same day only:<br/>the game is removed" .-> avail
 ```
 
 - **One action per local day**, a vote or a new game.
